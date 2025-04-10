@@ -2,9 +2,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BankSpringApplication {
-
+public class CurrencyApiApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BankSpringApplication.class, args);
+        SpringApplication.run(CurrencyApiApplication.class, args);
     }
 }

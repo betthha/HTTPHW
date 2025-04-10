@@ -1,54 +1,55 @@
-package service;import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import model.Currency;
+import repository.CurrencyRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class CurrencyService {
 
-    private final List<Currency> currencies = new ArrayList<>();
+    private final CurrencyRepository currencyRepository;
+
+    public CurrencyService(CurrencyRepository currencyRepository) {
+        this.currencyRepository = currencyRepository;
+    }
 
     public List<Currency> getAllCurrencies() {
-        return new ArrayList<>(currencies);
+        return currencyRepository.findAll();
     }
 
     public Currency addCurrency(Currency currency) {
-        if (currency.getId() != null && isCurrencyExist(currency.getId())) {
+        if (currency.getId() != null && currencyRepository.existsById(currency.getId())) {
             return currency;
         }
 
-        currency.setId(generateUniqueId());
-        currencies.add(currency);
-        return currency;
+        if (currency.getId() == null) {
+            currency.setId(generateUniqueId());
+        }
+
+        return currencyRepository.save(currency);
     }
 
     public Currency getCurrencyById(String id) {
-        Optional<Currency> currency = currencies.stream()
-                .filter(c -> c.getId().equals(id))
-                .findFirst();
-        return currency.orElseThrow(() -> new RuntimeException("Валюта с ID " + id + " не найдена"));
+        return currencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Валюта с ID " + id + " не найдена"));
     }
 
     public Currency updateCurrency(String id, Currency newCurrencyData) {
         Currency currency = getCurrencyById(id);
         updateCurrencyDetails(currency, newCurrencyData);
-        return currency;
+        return currencyRepository.save(currency);
     }
 
     public void deleteCurrency(String id) {
         Currency currency = getCurrencyById(id);
-        currencies.remove(currency);
+        currencyRepository.delete(currency);
     }
 
     private String generateUniqueId() {
         return UUID.randomUUID().toString();
-    }
-
-    private boolean isCurrencyExist(String id) {
-        return currencies.stream().anyMatch(c -> c.getId().equals(id));
     }
 
     private void updateCurrencyDetails(Currency existingCurrency, Currency updatedData) {
