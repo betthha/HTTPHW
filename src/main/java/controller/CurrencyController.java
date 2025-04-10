@@ -1,4 +1,4 @@
-package controller;import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,7 +7,7 @@ import service.CurrencyService;
 
 import java.util.List;
 
-@RequestMapping("/currencies")
+@RequestMapping("/api/currencies")
 @RequiredArgsConstructor
 @RestController
 public class CurrencyController {
@@ -22,7 +22,7 @@ public class CurrencyController {
 
     @PostMapping
     public ResponseEntity<Currency> createNewCurrency(@RequestBody Currency currency) {
-        if (currency.getName() == null  currency.getBaseCurrency() == null  currency.getPriceChangeRange() == null) {
+        if (currency.getName() == null  currency.getCode() == null  currency.getExchangeRate() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(currency);
         }
         Currency createdCurrency = currencyService.addCurrency(currency);
@@ -32,17 +32,30 @@ public class CurrencyController {
     @GetMapping("/{currencyId}")
     public ResponseEntity<Currency> getCurrencyById(@PathVariable String currencyId) {
         Currency currency = currencyService.getCurrencyById(currencyId);
+        if (currency == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(currency);
     }
 
     @PutMapping("/{currencyId}")
-    public ResponseEntity<Currency> updateCurrencyData(@PathVariable String currencyId, @RequestBody Currency updatedCurrency) {
+    public ResponseEntity<Currency> updateCurrencyData(
+            @PathVariable String currencyId,
+            @RequestBody Currency updatedCurrency) {
+        Currency existing = currencyService.getCurrencyById(currencyId);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
         Currency updatedCurrencyData = currencyService.updateCurrency(currencyId, updatedCurrency);
         return ResponseEntity.ok(updatedCurrencyData);
     }
 
     @DeleteMapping("/{currencyId}")
     public ResponseEntity<Void> deleteCurrency(@PathVariable String currencyId) {
+        Currency existing = currencyService.getCurrencyById(currencyId);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
         currencyService.deleteCurrency(currencyId);
         return ResponseEntity.noContent().build();
     }
